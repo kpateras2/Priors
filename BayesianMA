@@ -275,7 +275,7 @@ if(priortau2=="L"){
       d.new ~dnorm(d,prec)
 }", file="betaMeta2.txt")
 } 
-if(priortau2=="M"){ # # Prior on t HN(0.23,0.1)
+if(priortau2=="M"){
   cat("model
 {
         for( i in 1 : Nstud ) {
@@ -296,7 +296,7 @@ if(priortau2=="M"){ # # Prior on t HN(0.23,0.1)
       d.new ~dnorm(d,prec)
 }", file="betaMeta2.txt")
 }
-if(priortau2=="N"){ # # Prior on t HN(0.23,0.1)
+if(priortau2=="N"){
   cat("model
 {
           for( i in 1 : Nstud ) {
