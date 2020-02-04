@@ -1,0 +1,342 @@
+
+binomial.priorselection<-function(priortau2=c("A"),
+                                  blockerDat=list(rA = data1[,3],nA = data1[,8],
+                                                  rB = data1[,5],nB = data1[,7],
+                                                  Nstud = length(data1[,3])), muu=-3.02,tauu=0.2922,
+                                  param=NULL,
+                                  nniter=100000,nnthin=50,data11=data1,
+                                  pControl=0.01,ZeroCorrection=FALSE){
+
+   if(ZeroCorrection==TRUE) {pControl<-max(0.1,sum(data11==0)/(2*dim(data11)[1]*(sum(data11[,5:6])/(sum(data11[,5:6])+1))),na.rm=TRUE)}
+
+  priortau2<<-priortau2
+  if(likelihood=="Normal" | likelihood=="Binomial"){
+    tempdat<-blockerDat
+    temp=escalc(measure="OR", ai=ai, bi=bi, ci=ci, di=di, data=data11, replace=FALSE)
+    Nstud=dim(data11)[1]
+    s0.sqrt<<-(Nstud/sum(1/(temp$vi)^2))
+    PLOs=escalc(measure="PLO", xi=ci, ni=(ci+di), data=data11, replace=FALSE)
+    logits_max<-max(PLOs$yi)
+    logits_min<-min(PLOs$yi)
+    blockerDat=list(rA = data11[,5],nA = data11[,8],
+                    rB = data11[,3],nB = data11[,7],
+                    Nstud = length(data11[,3]),
+                    lmax=logits_max+10,
+                    lmin=logits_min-10)
+    blockerDat$pControl<-pControl
+
+  }
+   
+  if(priortau2=="N" | priortau2=="M") {blockerDat$s0.sqrt<-s0.sqrt ; blockerDatNormal$s0.sqrt<-s0.sqrt }
+  
+        tempp<-c("A","B","C","D","E","F","G","H","I","J","K","L","M","N")
+        if(sum(priortau2==tempp)<1) stop("Check the tau2 prior numbering")
+        if(priortau2=="A"){ 
+          
+          cat("model
+{
+              for( i in 1 : Nstud ) {
+              rA[i] ~ dbin(pA[i], nA[i])
+              rB[i] ~ dbin(pB[i], nB[i])
+              mu[i] ~ dnorm(m0, pControl) 
+              logit(pB[i]) <- mu[i] + 0.5*delta[i]
+              logit(pA[i]) <- mu[i] - 0.5*delta[i]
+              delta[i] ~ dnorm(d, prec)
+              }
+              m0 ~ dunif(lmin,lmax)
+              OR <- log(d)
+              d ~ dnorm(0.0,pControl)
+              tau<-sqrt(tau.sq)
+              tau.sq<-1/prec
+              prec~dgamma(0.001,0.001)
+              d.new ~dnorm(d,prec)
+}", file="betaMeta2.txt")
+} 
+if(priortau2=="B"){ 
+  cat("model
+{
+      for( i in 1 : Nstud ) {
+      rA[i] ~ dbin(pA[i], nA[i])
+      rB[i] ~ dbin(pB[i], nB[i])
+      mu[i] ~ dnorm(m0, pControl) 
+      logit(pB[i]) <- mu[i] + 0.5*delta[i]
+      logit(pA[i]) <- mu[i] - 0.5*delta[i]
+      delta[i] ~ dnorm(d, prec)
+      }
+      m0 ~ dunif(lmin,lmax)
+      OR <- log(d)
+      d ~ dnorm(0.0,pControl)
+      tau<-sqrt(tau.sq)
+      tau.sq<-1/prec
+      prec~dgamma(0.1,0.1)
+      d.new ~dnorm(d,prec)
+}", file="betaMeta2.txt")
+} # 1/tau2 ~ G(0.1,0.1)
+if(priortau2=="C"){ 
+  cat("model
+{
+       for( i in 1 : Nstud ) {
+      rA[i] ~ dbin(pA[i], nA[i])
+  rB[i] ~ dbin(pB[i], nB[i])
+  mu[i] ~ dnorm(m0, pControl) 
+  logit(pB[i]) <- mu[i] + 0.5*delta[i]
+  logit(pA[i]) <- mu[i] - 0.5*delta[i]
+  delta[i] ~ dnorm(d, prec)
+}
+      m0 ~ dunif(lmin,lmax)
+      OR <- log(d)
+      d ~ dnorm(0.0,pControl)
+      lv ~ dunif(-10,10)
+      log(tau.sq)<-lv
+      prec<-1/(tau.sq)
+      tau<-sqrt(tau.sq)
+      d.new ~dnorm(d,prec)
+}", file="betaMeta2.txt")
+} 
+if(priortau2=="D"){ 
+  cat("model
+{
+     for( i in 1 : Nstud ) {
+      rA[i] ~ dbin(pA[i], nA[i])
+      rB[i] ~ dbin(pB[i], nB[i])
+      mu[i] ~ dnorm(m0, pControl) 
+      logit(pB[i]) <- mu[i] + 0.5*delta[i]
+      logit(pA[i]) <- mu[i] - 0.5*delta[i]
+      delta[i] ~ dnorm(d, prec)
+      }
+      m0 ~ dunif(lmin,lmax)
+      OR <- log(d)
+      d ~ dnorm(0.0,pControl)
+      lv ~ dunif(-10,1.386)
+      log(tau.sq)<-lv
+      prec<-1/(tau.sq)
+      tau<-sqrt(tau.sq)
+      d.new ~dnorm(d,prec)
+}", file="betaMeta2.txt")
+}
+if(priortau2=="E"){ 
+  cat("model
+{
+       for( i in 1 : Nstud ) {
+      rA[i] ~ dbin(pA[i], nA[i])
+      rB[i] ~ dbin(pB[i], nB[i])
+      mu[i] ~ dnorm(m0, pControl) 
+      logit(pB[i]) <- mu[i] + 0.5*delta[i]
+      logit(pA[i]) <- mu[i] - 0.5*delta[i]
+      delta[i] ~ dnorm(d, prec)
+      }
+      m0 ~ dunif(lmin,lmax)
+      OR <- log(d)
+      d ~ dnorm(0.0,pControl)
+      tau<-sqrt(tau.sq)
+      tau.sq~dunif(0.001,1000)
+      prec<-1/tau.sq
+      d.new ~dnorm(d,prec)
+}", file="betaMeta2.txt")
+} 
+if(priortau2=="F"){ 
+  cat("model
+{
+      for( i in 1 : Nstud ) {
+      rA[i] ~ dbin(pA[i], nA[i])
+      rB[i] ~ dbin(pB[i], nB[i])
+      mu[i] ~ dnorm(m0, pControl) 
+      logit(pB[i]) <- mu[i] + 0.5*delta[i]
+      logit(pA[i]) <- mu[i] - 0.5*delta[i]
+      delta[i] ~ dnorm(d, prec)
+      }
+      m0 ~ dunif(lmin,lmax)
+      OR <- log(d)
+      d ~ dnorm(0.0,pControl)
+      tau.sq ~ dunif(0.001,4)
+      prec<-1/(tau.sq)
+      tau<-sqrt(tau.sq)
+      d.new ~dnorm(d,prec)
+}", file="betaMeta2.txt")
+} 
+if(priortau2=="G"){
+  cat("model
+{
+       for( i in 1 : Nstud ) {
+      rA[i] ~ dbin(pA[i], nA[i])
+  rB[i] ~ dbin(pB[i], nB[i])
+  mu[i] ~ dnorm(m0, pControl) 
+  logit(pB[i]) <- mu[i] + 0.5*delta[i]
+  logit(pA[i]) <- mu[i] - 0.5*delta[i]
+  delta[i] ~ dnorm(d, prec)
+}
+      m0 ~ dunif(lmin,lmax)
+      OR <- log(d)
+      d ~ dnorm(0.0,pControl)
+      tau~dunif(0,10)
+      tau.sq<-tau*tau
+      prec<-1/(tau.sq)
+      d.new ~dnorm(d,prec)
+}", file="betaMeta2.txt")
+} # tau ~ uniform(0,100)
+if(priortau2=="H"){ 
+  cat("model
+{
+        for( i in 1 : Nstud ) {
+      rA[i] ~ dbin(pA[i], nA[i])
+  rB[i] ~ dbin(pB[i], nB[i])
+  mu[i] ~ dnorm(m0, pControl) 
+  logit(pB[i]) <- mu[i] + 0.5*delta[i]
+  logit(pA[i]) <- mu[i] - 0.5*delta[i]
+  delta[i] ~ dnorm(d, prec)
+}
+      m0 ~ dunif(lmin,lmax)
+      OR <- log(d)
+      d ~ dnorm(0.0,pControl)
+      tau~dunif(0,2)
+      tau.sq<-tau*tau
+      prec<-1/(tau.sq)
+      d.new ~dnorm(d,prec)
+      
+}", file="betaMeta2.txt")
+} # tau ~ uniform(0,2)
+if(priortau2=="I"){
+  cat("model
+{
+        for( i in 1 : Nstud ) {
+      rA[i] ~ dbin(pA[i], nA[i])
+      rB[i] ~ dbin(pB[i], nB[i])
+      mu[i] ~ dnorm(m0, pControl) 
+      logit(pB[i]) <- mu[i] + 0.5*delta[i]
+      logit(pA[i]) <- mu[i] - 0.5*delta[i]
+      delta[i] ~ dnorm(d, prec)
+      }
+      m0 ~ dunif(lmin,lmax)
+      OR <- log(d)
+      d ~ dnorm(0.0,pControl)
+      tau.sq <- 1/prec
+      prec ~ dpar(1,0.001)
+      tau<-sqrt(tau.sq)
+      d.new ~dnorm(d,prec)
+}", file="betaMeta2.txt")
+}
+if(priortau2=="J"){ 
+  cat("model
+{
+          for( i in 1 : Nstud ) {
+      rA[i] ~ dbin(pA[i], nA[i])
+      rB[i] ~ dbin(pB[i], nB[i])
+      mu[i] ~ dnorm(m0, pControl) 
+      logit(pB[i]) <- mu[i] + 0.5*delta[i]
+      logit(pA[i]) <- mu[i] - 0.5*delta[i]
+      delta[i] ~ dnorm(d, prec)
+      }
+      m0 ~ dunif(lmin,lmax)
+      OR <- log(d)
+      d ~ dnorm(0.0,pControl)
+      tau.sq <- 1/prec
+      prec ~ dpar(1,0.25)
+      tau<-sqrt(tau.sq)
+      d.new ~dnorm(d,prec)
+}", file="betaMeta2.txt")
+}
+if(priortau2=="K"){ 
+  cat("model
+{
+          for( i in 1 : Nstud ) {
+      rA[i] ~ dbin(pA[i], nA[i])
+      rB[i] ~ dbin(pB[i], nB[i])
+      mu[i] ~ dnorm(m0, pControl) 
+      logit(pB[i]) <- mu[i] + 0.5*delta[i]
+      logit(pA[i]) <- mu[i] - 0.5*delta[i]
+      delta[i] ~ dnorm(d, prec)
+      }
+      m0 ~ dunif(lmin,lmax)
+      OR <- log(d)
+      d ~ dnorm(0.0,pControl)
+      tau~dnorm(0,0.001)I(0,)
+      tau.sq<-tau*tau
+      prec<-1/(tau.sq)
+      d.new ~dnorm(d,prec)
+}", file="betaMeta2.txt")
+}
+if(priortau2=="L"){  
+  cat("model
+{
+        for( i in 1 : Nstud ) {
+      rA[i] ~ dbin(pA[i], nA[i])
+      rB[i] ~ dbin(pB[i], nB[i])
+      mu[i] ~ dnorm(m0, pControl) 
+      logit(pB[i]) <- mu[i] + 0.5*delta[i]
+      logit(pA[i]) <- mu[i] - 0.5*delta[i]
+      delta[i] ~ dnorm(d, prec)
+      }
+      m0 ~ dunif(lmin,lmax)
+      OR <- log(d)
+      d ~ dnorm(0.0,pControl)
+      tau~dnorm(0,1)I(0,)
+      tau.sq<-tau*tau
+      prec<-1/(tau.sq)
+      d.new ~dnorm(d,prec)
+}", file="betaMeta2.txt")
+} 
+if(priortau2=="M"){ # # Prior on t HN(0.23,0.1)
+  cat("model
+{
+        for( i in 1 : Nstud ) {
+      rA[i] ~ dbin(pA[i], nA[i])
+      rB[i] ~ dbin(pB[i], nB[i])
+      mu[i] ~ dnorm(m0, pControl) 
+      logit(pB[i]) <- mu[i] + 0.5*delta[i]
+      logit(pA[i]) <- mu[i] - 0.5*delta[i]
+      delta[i] ~ dnorm(d, prec)
+      }
+      m0 ~ dunif(lmin,lmax)
+      OR <- log(d)
+      d ~ dnorm(0.0,pControl)
+      p0<- phi(0.75) / s0.sqrt
+      tau.sq ~ dnorm(0, p0)I(0, ) 
+      tau<- sqrt(tau.sq) 
+      prec<- 1 / tau.sq
+      d.new ~dnorm(d,prec)
+}", file="betaMeta2.txt")
+}
+if(priortau2=="N"){ # # Prior on t HN(0.23,0.1)
+  cat("model
+{
+          for( i in 1 : Nstud ) {
+      rA[i] ~ dbin(pA[i], nA[i])
+      rB[i] ~ dbin(pB[i], nB[i])
+      mu[i] ~ dnorm(m0, pControl) 
+      logit(pB[i]) <- mu[i] + 0.5*delta[i]
+      logit(pA[i]) <- mu[i] - 0.5*delta[i]
+      delta[i] ~ dnorm(d, prec)
+      }
+      m0 ~ dunif(lmin,lmax)
+      OR <- log(d)
+      d ~ dnorm(0.0,pControl)
+      p ~ dunif(0,1)
+      tau.sq<-tau*tau
+      tau<-(p*sqrt(s0.sqrt))/(1-p)
+      prec<-1/(tau.sq)
+      d.new ~dnorm(d,prec)
+
+}", file="betaMeta2.txt")
+}
+
+
+  blocker2Params <- c("d","tau","d.new")
+  
+  jagsoutput<-jags(data=blockerDatNormal,inits=NULL, 
+                   parameters.to.save=blocker2Params, n.iter=nniter, n.thin=nnthin, n.burnin=floor(nniter/6),
+                   model.file="betaMeta2.txt")
+  output<-jagsoutput[[2]]$summary[c(1,2,4),c(1,2,3,5,7)]
+  PR0<-c(sum(as.mcmc(jagsoutput)[[1]][,1]>0)/length(as.mcmc(jagsoutput)[[1]][,1]),
+         sum(as.mcmc(jagsoutput)[[1]][,2]>0)/length(as.mcmc(jagsoutput)[[1]][,2]),
+         sum(as.mcmc(jagsoutput)[[1]][,4]>0)/length(as.mcmc(jagsoutput)[[1]][,4]))
+
+return(list(output,as.mcmc(jagsoutput3),PR0))
+#plot(as.mcmc(jagsoutput))
+
+#Producing a predictive interval.
+## d.new<-dnorm(d, prec)
+## OR.new<-exp(d.new)
+}
+
+# Priors I and J were excluded from the article.
+# The above code can be used to produce simulation results and analyze a meta-analysis with a senstivity analysis given the above priors.
